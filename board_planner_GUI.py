@@ -169,6 +169,11 @@ layout.addWidget(purchased_boards_button)
 
 splitter = QSplitter(QtCore.Qt.Horizontal)
 
+# Part data table with label
+part_data_container = QWidget()
+part_data_layout = QVBoxLayout()
+part_data_label = QLabel('Part Data Setup')
+part_data_layout.addWidget(part_data_label)
 part_data_table = QTableView()
 # 100 rows.  Initialize all 'Use' to 0
 data_init = [{'Item': '', 'Use': 0, 'Quantity': 0, 'Thickness': 0.0, 'Width': 0.0, 'Length': 0.0, 'Units': 'in', 'Material': '', 'Sticker': '', 'Comments': ''} for _ in range(100)]
@@ -177,9 +182,15 @@ part_data_model = TableModel(part_data)
 part_data_table.setModel(part_data_model)
 part_data_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 part_data_table.customContextMenuRequested.connect(part_on_table_context_menu)
-splitter.addWidget(part_data_table)
+part_data_layout.addWidget(part_data_table)
+part_data_container.setLayout(part_data_layout)
+splitter.addWidget(part_data_container)
 
-
+# Purchased boards table with label
+PB_data_container = QWidget()
+PB_data_layout = QVBoxLayout()
+PB_data_label = QLabel('Purchased Board Data')
+PB_data_layout.addWidget(PB_data_label)
 # 100 rows.  Initialize all 'Use' to 0
 data2_init = [{'Material': '', 'Thickness': 0.0, 'Width': 0.0, 'Length': 0.0} for _ in range(100)]
 PB_data = pd.DataFrame(data2_init)
@@ -188,7 +199,9 @@ PB_data_table = QTableView()
 PB_data_table.setModel(PB_data_model)
 PB_data_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 PB_data_table.customContextMenuRequested.connect(PB_on_table_context_menu)
-splitter.addWidget(PB_data_table)
+PB_data_layout.addWidget(PB_data_table)
+PB_data_container.setLayout(PB_data_layout)
+splitter.addWidget(PB_data_container)
 
 layout.addWidget(splitter)
 
