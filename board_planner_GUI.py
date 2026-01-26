@@ -12,23 +12,29 @@ def on_table_context_menu(position):
     menu = QtWidgets.QMenu()
     load_action = menu.addAction('Load DataFrame from CSV')
     save_action = menu.addAction('Save DataFrame to CSV')
+    add_row_action = menu.addAction('Add Row')
     
-    action = menu.exec(board_data_table.mapToGlobal(position))
+    action = menu.exec(part_data_table.mapToGlobal(position))
     
     if action == load_action:
         file_name, _ = QFileDialog.getOpenFileName(window, 'Load DataFrame from CSV', '', 'CSV Files (*.csv)')
         if file_name:
-            global board_data
-            board_data = pd.read_csv(file_name)
-            board_data_model = TableModel(board_data)
-            board_data_table.setModel(board_data_model)
+            global part_data
+            part_data = pd.read_csv(file_name)
+            part_data_model = TableModel(part_data)
+            part_data_table.setModel(part_data_model)
     
     elif action == save_action:
         file_name, _ = QFileDialog.getSaveFileName(window, 'Save DataFrame to CSV', '', 'CSV Files (*.csv)')
         if file_name:
-            board_data.to_csv(file_name, index=False)
+            part_data.to_csv(file_name, index=False)
             QMessageBox.information(window, 'Success', f'DataFrame saved to {file_name}')
-
+    
+    elif action == add_row_action:
+        new_row = {col: '' for col in part_data.columns}
+        part_data.loc[len(part_data)] = new_row
+        part_data_model = TableModel(part_data)
+        part_data_table.setModel(part_data_model)
 
 class TableModel(QtCore.QAbstractTableModel):
 
@@ -132,29 +138,34 @@ layout.addWidget(purchased_boards_path)
 layout.addWidget(purchased_boards_button)
 
 
+resizable_horizontal_layout = QHBoxLayout()
+vlayout1 = QVBoxLayout()
+
+
 # add a table view for displaying board data #
-board_data_label = QLabel('Part Data Setup:')
-layout.addWidget(board_data_label)
-board_data_table = QTableView()
+part_data_label = QLabel('Part Data Setup:')
+layout.addWidget(part_data_label)
+part_data_table = QTableView()
 # 100 rows.  Initialize all 'Use' to 0
 data_init = [{'Item': '', 'Use': 0, 'Quantity': 0, 'Thickness': 0.0, 'Width': 0.0, 'Length': 0.0, 'Units': 'in', 'Material': '', 'Sticker': '', 'Comments': ''} for _ in range(100)]
+part_data = pd.DataFrame(data_init)
+part_data_model = TableModel(part_data)
+part_data_table.setModel(part_data_model)
+part_data_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+part_data_table.customContextMenuRequested.connect(on_table_context_menu)
 
-layout.addWidget(board_data_label)
-board_data_table = QTableView()
-board_data_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-board_data_table.customContextMenuRequested.connect(on_table_context_menu)
 
-board_data = pd.DataFrame(data_init)
-board_data_model = TableModel(board_data)
-board_data_table.setModel(board_data_model)
-layout.addWidget(board_data_table)
+vlayout1.addWidget(part_data_table)
+resizable_horizontal_layout.addLayout(vlayout1)
+layout.addLayout(resizable_horizontal_layout)
+
 
 # run button, colored green #
 
 run_button = QPushButton('Run Board Planner')
 run_button.setStyleSheet("background-color: green; color: white;")
 run_button.clicked.connect(on_run_button_clicked)
-layout.addWidget(run_button)
+
 
 
 # Set layout and show window
