@@ -1,8 +1,73 @@
 # GUI inputs #
 from board_planner_nonGUI import read_purchased_boards, read_and_clean_board_data, make_board_groups, pack_boards, get_end_positions, make_html_output
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QMessageBox
 import sys
+from PySide6 import QtWidgets
+from PySide6 import QtCore
+from PySide6.QtWidgets import QTableView
+import pandas as pd
 
+# Add this function before the GUI setup section
+def on_table_context_menu(position):
+    menu = QtWidgets.QMenu()
+    load_action = menu.addAction('Load DataFrame from CSV')
+    save_action = menu.addAction('Save DataFrame to CSV')
+    
+    action = menu.exec(board_data_table.mapToGlobal(position))
+    
+    if action == load_action:
+        file_name, _ = QFileDialog.getOpenFileName(window, 'Load DataFrame from CSV', '', 'CSV Files (*.csv)')
+        if file_name:
+            global board_data
+            board_data = pd.read_csv(file_name)
+            board_data_model = TableModel(board_data)
+            board_data_table.setModel(board_data_model)
+    
+    elif action == save_action:
+        file_name, _ = QFileDialog.getSaveFileName(window, 'Save DataFrame to CSV', '', 'CSV Files (*.csv)')
+        if file_name:
+            board_data.to_csv(file_name, index=False)
+            QMessageBox.information(window, 'Success', f'DataFrame saved to {file_name}')
+
+
+class TableModel(QtCore.QAbstractTableModel):
+
+    # make editable table model for displaying pandas dataframe in QTableView
+
+    def __init__(self, data):
+        super().__init__()
+        self._data = data
+
+    def data(self, index, role):
+        if role == QtCore.Qt.DisplayRole:
+            value = self._data.iloc[index.row(), index.column()]
+            return str(value)
+
+    def setData(self, index, value, role):
+        if role == QtCore.Qt.EditRole:
+            self._data.iloc[index.row(), index.column()] = value
+            self.dataChanged.emit(index, index)
+            return True
+        return False
+
+    def flags(self, index):
+        return super().flags(index) | QtCore.Qt.ItemIsEditable
+
+    def rowCount(self, index):
+        return self._data.shape[0]
+
+    def columnCount(self, index):
+        return self._data.shape[1]
+
+    def headerData(self, section, orientation, role):
+        # section is the index of the column/row.
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                return str(self._data.columns[section])
+
+            if orientation == QtCore.Qt.Vertical:
+                return str(self._data.index[section])
+            
 def on_run_button_clicked():
     try:
         thickness_tolerance = float(thickness_input.text())
@@ -24,16 +89,23 @@ app = QApplication(sys.argv)
 window = QWidget()
 window.setWindowTitle('Board Planner Settings')
 layout = QVBoxLayout()
+horiz_layout = QHBoxLayout()
+sub_layout1 = QVBoxLayout()
 # thickness tolerance input #
 thickness_label = QLabel('Thickness Tolerance (inches):')
 thickness_input = QLineEdit('0.02')
-layout.addWidget(thickness_label)
-layout.addWidget(thickness_input)
+sub_layout1.addWidget(thickness_label)
+sub_layout1.addWidget(thickness_input)
+horiz_layout.addLayout(sub_layout1)
+
+sublayout2 = QVBoxLayout()
 # padding input #
 padding_label = QLabel('Padding (inches):')
 padding_input = QLineEdit('0.5')
-layout.addWidget(padding_label)
-layout.addWidget(padding_input)
+sublayout2.addWidget(padding_label)
+sublayout2.addWidget(padding_input)
+horiz_layout.addLayout(sublayout2)
+layout.addLayout(horiz_layout)
 # input file selection #
 input_file_label = QLabel('Input File:')
 input_file_path = QLineEdit('greene_medicine_cabinet.csv')
@@ -58,6 +130,24 @@ purchased_boards_button.clicked.connect(browse_purchased_boards_file)
 layout.addWidget(purchased_boards_label)
 layout.addWidget(purchased_boards_path)
 layout.addWidget(purchased_boards_button)
+
+
+# add a table view for displaying board data #
+board_data_label = QLabel('Part Data Setup:')
+layout.addWidget(board_data_label)
+board_data_table = QTableView()
+# 100 rows.  Initialize all 'Use' to 0
+data_init = [{'Item': '', 'Use': 0, 'Quantity': 0, 'Thickness': 0.0, 'Width': 0.0, 'Length': 0.0, 'Units': 'in', 'Material': '', 'Sticker': '', 'Comments': ''} for _ in range(100)]
+
+layout.addWidget(board_data_label)
+board_data_table = QTableView()
+board_data_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+board_data_table.customContextMenuRequested.connect(on_table_context_menu)
+
+board_data = pd.DataFrame(data_init)
+board_data_model = TableModel(board_data)
+board_data_table.setModel(board_data_model)
+layout.addWidget(board_data_table)
 
 # run button, colored green #
 
