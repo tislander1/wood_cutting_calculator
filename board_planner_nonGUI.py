@@ -4,14 +4,9 @@ import rectpack
 import webbrowser
 
 input_file = 'greene_medicine_cabinet.csv'
+purchased_boards_file = 'purchased_boards_greene_medicine_cabinet.csv'
 thickness_tolerance = 0.02  # inches
 padding = 0.5  # inches
-
-purchased_boards = [{'Material': 'cherry', 'Width': 8, 'Thickness': 13/16, 'Length': 96},
-                    {'Material': 'cherry', 'Width': 8, 'Thickness': 13/16, 'Length': 96},
-                    {'Material': 'cherry', 'Width': 8, 'Thickness': 1/4, 'Length': 96},
-                    {'Material': 'poplar', 'Width': 6, 'Thickness': 1/4, 'Length': 96},
-                    {'Material': 'cherry', 'Width': 6, 'Thickness': 5/8, 'Length': 96},]
 
 def read_and_clean_board_data(input_csv_filename, thickness_tolerance, padding):
     """Read and clean the board data from the input CSV file.
@@ -185,6 +180,7 @@ def get_end_positions(packed_boards):
 
 if __name__ == '__main__':
 
+    purchased_boards = pd.read_csv(purchased_boards_file).to_dict(orient='records')
     purchased_boards = [{'Material': pb['Material'].lower(),
                         'Width': float(pb['Width']),
                         'Thickness': float(pb['Thickness']),
