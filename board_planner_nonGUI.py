@@ -178,19 +178,7 @@ def get_end_positions(packed_boards):
                 max_dim[board['Purchased Board ID']][1] = end_pos[1]
     return max_dim
 
-if __name__ == '__main__':
-
-    purchased_boards = pd.read_csv(purchased_boards_file).to_dict(orient='records')
-    purchased_boards = [{'Material': pb['Material'].lower(),
-                        'Width': float(pb['Width']),
-                        'Thickness': float(pb['Thickness']),
-                        'Length': float(pb['Length']), 'BoardID': ix+1} for ix, pb in enumerate(purchased_boards)]
-    
-    board_data = read_and_clean_board_data(input_file, thickness_tolerance, padding)
-    board_groups = make_board_groups(board_data)
-    packed_boards = pack_boards(board_groups, purchased_boards, thickness_tolerance)
-
-    max_board_dim = get_end_positions(packed_boards)
+def make_html_output(packed_boards, purchased_boards, board_data, padding, max_board_dim):
 
     html_output = '<html><head><title>Board Cutting Plan</title></head><body>'
 
@@ -240,6 +228,21 @@ if __name__ == '__main__':
     # open the output HTML file in the default web browser
 
     webbrowser.open('board_cutting_plan.html')
+if __name__ == '__main__':
+
+    purchased_boards = pd.read_csv(purchased_boards_file).to_dict(orient='records')
+    purchased_boards = [{'Material': pb['Material'].lower(),
+                        'Width': float(pb['Width']),
+                        'Thickness': float(pb['Thickness']),
+                        'Length': float(pb['Length']), 'BoardID': ix+1} for ix, pb in enumerate(purchased_boards)]
+    
+    board_data = read_and_clean_board_data(input_file, thickness_tolerance, padding)
+    board_groups = make_board_groups(board_data)
+    packed_boards = pack_boards(board_groups, purchased_boards, thickness_tolerance)
+    max_board_dim = get_end_positions(packed_boards)
+    make_html_output(packed_boards, purchased_boards, board_data, padding, max_board_dim)
+
+
 
 x = 2
 
