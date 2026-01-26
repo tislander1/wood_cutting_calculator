@@ -229,7 +229,7 @@ if __name__ == '__main__':
         if board['BoardID'] in max_board_dim:
             used_w, used_l = max_board_dim[board['BoardID']]
             html_output += f"<font color='green'><b>Max Used Dimensions: {used_w:.6g} in (W) x {used_l:.6g} in (L)</b></font><br>"
-        html_output += '<table border="1"><tr><th>ID</th><th>Item</th><th>Sticker</th><th>Padded Dimensions (W x L)</th><th>Unpadded Dimensions (W x L)</th><th>Start Position (X, Y)</th><th>End Position (X, Y)</th><th>Comments</th></tr>'
+        html_output += '<table border="1"><tr><th>ID</th><th>Item</th><th>Ltr</th><th>Padded Dims (W x L)</th><th>Dims (W x L)</th><th>Start Pos. (X, Y)</th><th>End Pos. (X, Y)</th><th>Notes</th></tr>'
         for key in packed_boards.keys():
             for b in packed_boards[key]:
                 if b['Purchased Board ID'] == board['BoardID']:
