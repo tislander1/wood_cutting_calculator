@@ -49,7 +49,14 @@ def PB_on_table_context_menu(position):
         file_name, _ = QFileDialog.getOpenFileName(window, 'Load DataFrame from CSV', '', 'CSV Files (*.csv)')
         if file_name:
             global PB_data
-            PB_data = pd.read_csv(file_name)
+
+            loaded_df = pd.read_csv(file_name)
+            PB_data = pd.DataFrame([{'Material': pb['Material'].lower(),
+                        'Width': float(pb['Width']),
+                        'Thickness': float(pb['Thickness']),
+                        'Length': float(pb['Length']), 'BoardID': ix+1} for ix, pb in loaded_df.iterrows()])
+
+
             PB_data_model = TableModel(PB_data)
             PB_data_table.setModel(PB_data_model)
     
@@ -111,14 +118,19 @@ def on_run_button_clicked():
         # purchased_boards_file = purchased_boards_path.text()
         #purchased_boards = read_purchased_boards(purchased_boards_file)
         purchased_boards = PB_data.to_dict(orient='records')
-        board_data = read_and_clean_board_data(input_file, thickness_tolerance, padding)
+        #input_csv_filename, thickness_tolerance, padding
+        board_data = read_and_clean_board_data(input_csv_filename=input_file, thickness_tolerance=thickness_tolerance, padding=padding, input_dataframe=part_data)
         board_groups = make_board_groups(board_data)
         packed_boards = pack_boards(board_groups, purchased_boards, thickness_tolerance)
         max_board_dim = get_end_positions(packed_boards)
         make_html_output(packed_boards, purchased_boards, board_data, padding, max_board_dim)
         QMessageBox.information(window, 'Success', 'Board planning completed successfully!\nCheck board_cutting_plan.html for output.')
     except Exception as e:
-        QMessageBox.critical(window, 'Error', f'An error occurred: {e}')
+        # print entire traceback to QMessageBox
+        import traceback
+        tb_str = traceback.format_exc()
+
+        QMessageBox.critical(window, 'Error', f'An error occurred: {str(e)}\n\nTraceback:\n{tb_str}')
 
 # GUI setup #
 app = QApplication(sys.argv)
