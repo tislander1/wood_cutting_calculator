@@ -114,12 +114,11 @@ def on_run_button_clicked():
     try:
         thickness_tolerance = float(thickness_input.text())
         padding = float(padding_input.text())
-        input_file = input_file_path.text()
         # purchased_boards_file = purchased_boards_path.text()
         #purchased_boards = read_purchased_boards(purchased_boards_file)
         purchased_boards = PB_data.to_dict(orient='records')
         #input_csv_filename, thickness_tolerance, padding
-        board_data = read_and_clean_board_data(input_csv_filename=input_file, thickness_tolerance=thickness_tolerance, padding=padding, input_dataframe=part_data)
+        board_data = read_and_clean_board_data(input_csv_filename='', thickness_tolerance=thickness_tolerance, padding=padding, input_dataframe=part_data)
         board_groups = make_board_groups(board_data)
         packed_boards = pack_boards(board_groups, purchased_boards, thickness_tolerance)
         max_board_dim = get_end_positions(packed_boards)
@@ -154,18 +153,6 @@ sublayout2.addWidget(padding_label)
 sublayout2.addWidget(padding_input)
 horiz_layout.addLayout(sublayout2)
 layout.addLayout(horiz_layout)
-# input file selection #
-input_file_label = QLabel('Input File:')
-input_file_path = QLineEdit('greene_medicine_cabinet.csv')
-input_file_button = QPushButton('Browse')
-def browse_input_file():
-    file_name, _ = QFileDialog.getOpenFileName(window, 'Select Input CSV File', '', 'CSV Files (*.csv)')
-    if file_name:
-        input_file_path.setText(file_name)  
-input_file_button.clicked.connect(browse_input_file)
-layout.addWidget(input_file_label)
-layout.addWidget(input_file_path)
-layout.addWidget(input_file_button)
 
 
 splitter = QSplitter(QtCore.Qt.Horizontal)
@@ -206,6 +193,8 @@ splitter.addWidget(PB_data_container)
 
 layout.addWidget(splitter)
 
+layout.setStretchFactor(horiz_layout, 1)
+layout.setStretchFactor(splitter, 9)
 
 # run button, colored green #
 
