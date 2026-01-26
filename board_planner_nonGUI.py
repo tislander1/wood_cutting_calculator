@@ -3,7 +3,7 @@ from numpy import nan
 import rectpack
 import webbrowser
 
-input_file = 'greene_medicine_cabinet.csv'
+input_file = 'greene_medicine_cabinet - Copy.csv'
 purchased_boards_file = 'purchased_boards_greene_medicine_cabinet.csv'
 thickness_tolerance = 0.02  # inches
 padding = 0.5  # inches
@@ -23,18 +23,22 @@ def read_purchased_boards(purchased_boards_csv_filename):
                         'Length': float(pb['Length']), 'BoardID': ix+1} for ix, pb in enumerate(purchased_boards)]
     return purchased_boards
 
-def read_and_clean_board_data(input_csv_filename, thickness_tolerance, padding):
+def read_and_clean_board_data(input_csv_filename, thickness_tolerance, padding, input_dataframe=None):
     """Read and clean the board data from the input CSV file.
 
     Args:
         input_csv_filename (str): Path to the input CSV file.
         thickness_tolerance (float): Tolerance for grouping similar thicknesses.
         padding (float): Padding to add to width and length.
+        input_dataframe (pd.DataFrame, optional): If provided, use this DataFrame instead of reading from CSV.
     Returns:
         list: A list of dictionaries representing cleaned board data.
     """
 
-    project_boards = pd.read_csv(input_csv_filename, header=1)
+    if input_dataframe is not None:
+        project_boards = input_dataframe
+    else:
+        project_boards = pd.read_csv(input_csv_filename)
 
     # remove any record where the 'Use' column is not 1
     project_boards = project_boards[project_boards['Use'] == 1].copy()
