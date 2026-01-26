@@ -108,8 +108,9 @@ def on_run_button_clicked():
         thickness_tolerance = float(thickness_input.text())
         padding = float(padding_input.text())
         input_file = input_file_path.text()
-        purchased_boards_file = purchased_boards_path.text()
-        purchased_boards = read_purchased_boards(purchased_boards_file)
+        # purchased_boards_file = purchased_boards_path.text()
+        #purchased_boards = read_purchased_boards(purchased_boards_file)
+        purchased_boards = PB_data.to_dict(orient='records')
         board_data = read_and_clean_board_data(input_file, thickness_tolerance, padding)
         board_groups = make_board_groups(board_data)
         packed_boards = pack_boards(board_groups, purchased_boards, thickness_tolerance)
@@ -153,18 +154,6 @@ input_file_button.clicked.connect(browse_input_file)
 layout.addWidget(input_file_label)
 layout.addWidget(input_file_path)
 layout.addWidget(input_file_button)
-# purchased boards file selection #
-purchased_boards_label = QLabel('Purchased Boards File:')
-purchased_boards_path = QLineEdit('purchased_boards_greene_medicine_cabinet.csv')
-purchased_boards_button = QPushButton('Browse')
-def browse_purchased_boards_file():
-    file_name, _ = QFileDialog.getOpenFileName(window, 'Select Purchased Boards CSV File', '', 'CSV Files (*.csv)')
-    if file_name:
-        purchased_boards_path.setText(file_name)
-purchased_boards_button.clicked.connect(browse_purchased_boards_file)
-layout.addWidget(purchased_boards_label)
-layout.addWidget(purchased_boards_path)
-layout.addWidget(purchased_boards_button)
 
 
 splitter = QSplitter(QtCore.Qt.Horizontal)
@@ -211,6 +200,7 @@ layout.addWidget(splitter)
 run_button = QPushButton('Run Board Planner')
 run_button.setStyleSheet("background-color: green; color: white;")
 run_button.clicked.connect(on_run_button_clicked)
+layout.addWidget(run_button)
 
 
 
