@@ -8,6 +8,21 @@ purchased_boards_file = 'purchased_boards_greene_medicine_cabinet.csv'
 thickness_tolerance = 0.02  # inches
 padding = 0.5  # inches
 
+def read_purchased_boards(purchased_boards_csv_filename):
+    """Read the purchased boards from the CSV file.
+
+    Args:
+        purchased_boards_csv_filename (str): Path to the purchased boards CSV file.
+    Returns:
+        list: A list of dictionaries representing purchased boards.
+    """
+    purchased_boards = pd.read_csv(purchased_boards_file).to_dict(orient='records')
+    purchased_boards = [{'Material': pb['Material'].lower(),
+                        'Width': float(pb['Width']),
+                        'Thickness': float(pb['Thickness']),
+                        'Length': float(pb['Length']), 'BoardID': ix+1} for ix, pb in enumerate(purchased_boards)]
+    return purchased_boards
+
 def read_and_clean_board_data(input_csv_filename, thickness_tolerance, padding):
     """Read and clean the board data from the input CSV file.
 
@@ -230,12 +245,7 @@ def make_html_output(packed_boards, purchased_boards, board_data, padding, max_b
     webbrowser.open('board_cutting_plan.html')
 if __name__ == '__main__':
 
-    purchased_boards = pd.read_csv(purchased_boards_file).to_dict(orient='records')
-    purchased_boards = [{'Material': pb['Material'].lower(),
-                        'Width': float(pb['Width']),
-                        'Thickness': float(pb['Thickness']),
-                        'Length': float(pb['Length']), 'BoardID': ix+1} for ix, pb in enumerate(purchased_boards)]
-    
+    purchased_boards = read_purchased_boards(purchased_boards_file)
     board_data = read_and_clean_board_data(input_file, thickness_tolerance, padding)
     board_groups = make_board_groups(board_data)
     packed_boards = pack_boards(board_groups, purchased_boards, thickness_tolerance)
