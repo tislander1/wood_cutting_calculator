@@ -1,6 +1,6 @@
 # GUI inputs #
 from board_planner_nonGUI import read_purchased_boards, read_and_clean_board_data, make_board_groups, pack_boards, get_end_positions, make_html_output
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QApplication, QWidget, QSplitter, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QMessageBox
 import sys
 from PySide6 import QtWidgets
 from PySide6 import QtCore
@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QTableView
 import pandas as pd
 
 # Add this function before the GUI setup section
-def on_table_context_menu(position):
+def part_on_table_context_menu(position):
     menu = QtWidgets.QMenu()
     load_action = menu.addAction('Load DataFrame from CSV')
     save_action = menu.addAction('Save DataFrame to CSV')
@@ -35,6 +35,35 @@ def on_table_context_menu(position):
         part_data.loc[len(part_data)] = new_row
         part_data_model = TableModel(part_data)
         part_data_table.setModel(part_data_model)
+
+# Add this function before the GUI setup section
+def PB_on_table_context_menu(position):
+    menu = QtWidgets.QMenu()
+    load_action = menu.addAction('Load DataFrame from CSV')
+    save_action = menu.addAction('Save DataFrame to CSV')
+    add_row_action = menu.addAction('Add Row')
+    
+    action = menu.exec(PB_data_table.mapToGlobal(position))
+    
+    if action == load_action:
+        file_name, _ = QFileDialog.getOpenFileName(window, 'Load DataFrame from CSV', '', 'CSV Files (*.csv)')
+        if file_name:
+            global PB_data
+            PB_data = pd.read_csv(file_name)
+            PB_data_model = TableModel(PB_data)
+            PB_data_table.setModel(PB_data_model)
+    
+    elif action == save_action:
+        file_name, _ = QFileDialog.getSaveFileName(window, 'Save DataFrame to CSV', '', 'CSV Files (*.csv)')
+        if file_name:
+            PB_data.to_csv(file_name, index=False)
+            QMessageBox.information(window, 'Success', f'DataFrame saved to {file_name}')
+    
+    elif action == add_row_action:
+        new_row = {col: '' for col in PB_data.columns}
+        PB_data.loc[len(PB_data)] = new_row
+        PB_data_model = TableModel(PB_data)
+        PB_data_table.setModel(PB_data_model)
 
 class TableModel(QtCore.QAbstractTableModel):
 
@@ -138,13 +167,8 @@ layout.addWidget(purchased_boards_path)
 layout.addWidget(purchased_boards_button)
 
 
-resizable_horizontal_layout = QHBoxLayout()
-vlayout1 = QVBoxLayout()
+splitter = QSplitter(QtCore.Qt.Horizontal)
 
-
-# add a table view for displaying board data #
-part_data_label = QLabel('Part Data Setup:')
-layout.addWidget(part_data_label)
 part_data_table = QTableView()
 # 100 rows.  Initialize all 'Use' to 0
 data_init = [{'Item': '', 'Use': 0, 'Quantity': 0, 'Thickness': 0.0, 'Width': 0.0, 'Length': 0.0, 'Units': 'in', 'Material': '', 'Sticker': '', 'Comments': ''} for _ in range(100)]
@@ -152,12 +176,21 @@ part_data = pd.DataFrame(data_init)
 part_data_model = TableModel(part_data)
 part_data_table.setModel(part_data_model)
 part_data_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-part_data_table.customContextMenuRequested.connect(on_table_context_menu)
+part_data_table.customContextMenuRequested.connect(part_on_table_context_menu)
+splitter.addWidget(part_data_table)
 
 
-vlayout1.addWidget(part_data_table)
-resizable_horizontal_layout.addLayout(vlayout1)
-layout.addLayout(resizable_horizontal_layout)
+# 100 rows.  Initialize all 'Use' to 0
+data2_init = [{'Material': '', 'Thickness': 0.0, 'Width': 0.0, 'Length': 0.0} for _ in range(100)]
+PB_data = pd.DataFrame(data2_init)
+PB_data_model = TableModel(PB_data)
+PB_data_table = QTableView()
+PB_data_table.setModel(PB_data_model)
+PB_data_table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+PB_data_table.customContextMenuRequested.connect(PB_on_table_context_menu)
+splitter.addWidget(PB_data_table)
+
+layout.addWidget(splitter)
 
 
 # run button, colored green #
