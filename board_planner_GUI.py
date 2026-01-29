@@ -159,6 +159,44 @@ def on_run_button_clicked():
 
         QMessageBox.critical(window, 'Error', f'An error occurred: {str(e)}\n\nTraceback:\n{tb_str}')
 
+def on_save_button_clicked():
+    # Save current settings to a config file #
+    # We will need to open these later, so just use a pickle file for simplicity #
+    file_name, _ = QFileDialog.getSaveFileName(window, 'Save Settings to Board Planner File', '', 'Board Planner Files (*.pkl)')
+    if file_name:
+        import pickle
+        settings = {
+            'thickness_tolerance': thickness_input.text(),
+            'padding': padding_input.text(),
+            'part_data': part_data,
+            'PB_data': PB_data
+        }
+        with open(file_name, 'wb') as f:
+            pickle.dump(settings, f)
+        QMessageBox.information(window, 'Success', f'Settings saved to {file_name}')
+
+def on_load_button_clicked():
+    # Load settings from a config file #
+    file_name, _ = QFileDialog.getOpenFileName(window, 'Load Settings from Board Planner File', '', 'Board Planner Files (*.pkl)')
+    if file_name:
+        import pickle
+        with open(file_name, 'rb') as f:
+            settings = pickle.load(f)
+        thickness_input.setText(settings.get('thickness_tolerance', '0.02'))
+        padding_input.setText(settings.get('padding', '0.5'))
+        global part_data, PB_data
+        part_data = settings.get('part_data', part_data)
+        PB_data = settings.get('PB_data', PB_data)
+        # Update table models
+        part_data_model = TableModel(part_data)
+        part_data_table.setModel(part_data_model)
+        PB_data_model = TableModel(PB_data)
+        PB_data_table.setModel(PB_data_model)
+        QMessageBox.information(window, 'Success', f'Settings loaded from {file_name}')
+
+
+
+
 # GUI setup #
 app = QApplication(sys.argv)
 window = QWidget()
@@ -226,12 +264,27 @@ layout.setStretchFactor(splitter, 9)
 
 # run button, colored green #
 
+# horizontal layout for run, save, load buttons
+button_layout = QHBoxLayout()
+
 run_button = QPushButton('Run Board Planner')
 run_button.setStyleSheet("background-color: green; color: white;")
 run_button.clicked.connect(on_run_button_clicked)
-layout.addWidget(run_button)
+button_layout.addWidget(run_button)
 
+# save settings button (colored blue) #
+save_button = QPushButton('Save Settings')
+save_button.setStyleSheet("background-color: blue; color: white;")
+save_button.clicked.connect(on_save_button_clicked)
+button_layout.addWidget(save_button)
 
+# load settings button (colored red) #
+load_button = QPushButton('Load Settings')
+load_button.setStyleSheet("background-color: red; color: white;")
+load_button.clicked.connect(on_load_button_clicked)
+button_layout.addWidget(load_button)
+
+layout.addLayout(button_layout)
 
 # Set layout and show window
 window.setLayout(layout)
