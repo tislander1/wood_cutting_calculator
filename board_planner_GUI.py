@@ -7,6 +7,12 @@ from PySide6 import QtCore
 from PySide6.QtWidgets import QTableView
 import pandas as pd
 
+def tentative_int(value):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return value
+
 # Add this function before the GUI setup section
 def part_on_table_context_menu(position):
     menu = QtWidgets.QMenu()
@@ -21,6 +27,17 @@ def part_on_table_context_menu(position):
         if file_name:
             global part_data
             part_data = pd.read_csv(file_name)
+            {'Item': '', 'Use': 0, 'Quantity': 0, 'Thickness': 0.0, 'Width': 0.0, 'Length': 0.0, 'Units': 'in', 'Material': '', 'Sticker': '', 'Comments': ''}
+            part_data = pd.DataFrame([{'Item': row['Item'],
+                        'Use': tentative_int(float(row['Use'])),
+                        'Quantity': tentative_int(float(row['Quantity'])),
+                        'Thickness': float(row['Thickness']),
+                        'Width': float(row['Width']),
+                        'Length': float(row['Length']),
+                        'Units': row['Units'],
+                        'Material': row['Material'],
+                        'Sticker': row['Sticker'],
+                        'Comments': row['Comments']} for ix, row in part_data.iterrows()])
             part_data_model = TableModel(part_data)
             part_data_table.setModel(part_data_model)
     
