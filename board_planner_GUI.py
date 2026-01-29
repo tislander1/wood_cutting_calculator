@@ -104,6 +104,17 @@ class TableModel(QtCore.QAbstractTableModel):
 
     def setData(self, index, value, role):
         if role == QtCore.Qt.EditRole:
+            col_name = self._data.columns[index.column()]
+            if col_name in ['Use', 'Quantity', 'BoardID']:
+                try:
+                    value = int(value)
+                except ValueError:
+                    return False
+            elif col_name in ['Thickness', 'Width', 'Length']:
+                try:
+                    value = float(value)
+                except ValueError:
+                    return False
             self._data.iloc[index.row(), index.column()] = value
             self.dataChanged.emit(index, index)
             return True
