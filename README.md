@@ -13,6 +13,7 @@ The calculator will determine whether the parts can be cut out of the boards, re
 <img width="1187" height="869" alt="image" src="https://github.com/user-attachments/assets/f31f23ef-c9e4-436f-b97a-0bf2e140797c" />
 <img width="1171" height="740" alt="image" src="https://github.com/user-attachments/assets/a3c4741d-0044-49f3-b0e1-d028c6899e70" />
 
+<img width="157" height="896" alt="image" src="https://github.com/user-attachments/assets/e23f0331-1ba0-4951-83d5-395ccbdf14e3" />
 
 
 
