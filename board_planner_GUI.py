@@ -6,6 +6,7 @@ from PySide6 import QtWidgets
 from PySide6 import QtCore
 from PySide6.QtWidgets import QTableView
 import pandas as pd
+from PIL import Image, ImageDraw, ImageFont
 
 def tentative_int(value):
     try:
@@ -138,6 +139,78 @@ class TableModel(QtCore.QAbstractTableModel):
             if orientation == QtCore.Qt.Vertical:
                 return str(self._data.index[section])
             
+def draw_boards(packed_boards, boards, max_board_dim, padding):
+    # image size in pixels: Use 1/16 inch = 3 pixels
+    image_names = {}
+
+    margin = 10  # pixels
+    scale = 48  # 1 inch = 48 pixels (1/16 inch = 3 pixels)
+
+    light_colors_PIL = {
+        0: (255, 182, 193),  # Light Pink
+        1: (173, 216, 230),  # Light Blue
+        2: (144, 238, 144),  # Light Green
+        3: (255, 255, 224),  # Light Yellow
+        4: (255, 228, 181),  # Light Orange
+        5: (240, 230, 140),  # Khaki
+        6: (176, 224, 230),  # Powder Blue
+        7: (152, 251, 152),  # Pale Green
+        8: (255, 240, 245),   # Lavender Blush
+        9: (255, 250, 205),  # Lemon Chiffon
+        10: (216, 191, 216),  # Thistle
+    }
+
+    for board in boards:
+        color_num = 0
+        board_ID = board.get('BoardID', None)
+        if board_ID is None:
+            print('oops')
+            continue
+        img_width = int((board['Width']) * scale) + 2 * margin
+        img_length = int((board['Length']) * scale) + 2 * margin
+        image = Image.new('RGB', (img_width, img_length), 'white')
+        draw = ImageDraw.Draw(image)
+        # Draw purchased board outline
+        b_w = board['Width'] * scale
+        b_l = board['Length'] * scale
+        draw.rectangle([margin, margin, margin + b_w, margin + b_l], outline='black', width=2)
+
+        # Draw parts for this board
+        for pb in packed_boards:
+            part_list = packed_boards[pb]
+            for part in part_list:
+                if part.get('Purchased Board ID', None) != board_ID:
+                    continue
+
+                # outer rectangle with padding
+                x1 = margin + part['Start Position'][0] * scale
+                y1 = margin + part['Start Position'][1] * scale
+                x2 = margin + part['End Position'][0] * scale
+                y2 = margin + part['End Position'][1] * scale
+                draw.rectangle([x1, y1, x2, y2], outline='red', width=1)
+
+                x_inner1 = x1 + padding * scale
+                y_inner1 = y1 + padding * scale
+
+                x_inner2 = x2 - padding * scale
+                y_inner2 = y2 - padding * scale
+                color = light_colors_PIL[color_num % len(light_colors_PIL)]
+                color_num += 1
+                draw.rectangle([x_inner1, y_inner1, x_inner2, y_inner2], outline='blue', fill=color, width=1)
+                # add text label in center
+                text = f"{part['Sticker']}"
+                text_x = (x_inner1 + x_inner2) / 2
+                text_y = (y_inner1 + y_inner2) / 2
+                text_size_px = int(min(scale * 1.0, (x_inner2 - x_inner1) // 2))  # 0.25 inch in pixels, capped at 24px
+                font = ImageFont.truetype("arial.ttf", size=text_size_px)
+                
+                draw.text((text_x, text_y), text, fill='black', anchor='mm', font=font)
+        # save image for this board
+        image.save(f'purchased_board_{board_ID}.png')
+        image_names[board_ID] = {'height': img_length, 'width': img_width, 'file': f'purchased_board_{board_ID}.png'}
+        print(f'Saved image for purchased board {board_ID} as purchased_board_{board_ID}.png')
+    return image_names
+            
 def on_run_button_clicked():
     try:
         thickness_tolerance = float(thickness_input.text())
@@ -150,8 +223,9 @@ def on_run_button_clicked():
         board_groups = make_board_groups(board_data)
         packed_boards = pack_boards(board_groups, purchased_boards, thickness_tolerance)
         max_board_dim = get_end_positions(packed_boards)
-        make_html_output(packed_boards, purchased_boards, board_data, padding, max_board_dim)
-        QMessageBox.information(window, 'Success', 'Board planning completed successfully!\nCheck board_cutting_plan.html for output.')
+        image_files = draw_boards(packed_boards, purchased_boards, max_board_dim, padding)
+        make_html_output(packed_boards, purchased_boards, board_data, padding, max_board_dim, image_files)
+        QMessageBox.information(window, 'Success', f'Board planning completed successfully!\nCheck board_cutting_plan.html for output.\nImage files saved: {", ".join([info["file"] for info in image_files.values()])}')
     except Exception as e:
         # print entire traceback to QMessageBox
         import traceback

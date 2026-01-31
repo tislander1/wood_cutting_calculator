@@ -197,11 +197,11 @@ def get_end_positions(packed_boards):
                 max_dim[board['Purchased Board ID']][1] = end_pos[1]
     return max_dim
 
-def make_html_output(packed_boards, purchased_boards, board_data, padding, max_board_dim):
+def make_html_output(packed_boards, purchased_boards, board_data, padding, max_board_dim, image_list=None):
 
     html_output = '<html><head><title>Board Cutting Plan</title></head><body>'
 
-    html_output += '<h1>Board Cutting Plan</h1>'
+    html_output += '<h1 id="board-cutting-plan">Board Cutting Plan</h1>'
     html_output += '<ul>'
     html_output += f'<li>Padding added to each dimension: {padding:.6g} in</li>'
     html_output += f'<li>Total number of purchased boards: {len(purchased_boards)}</li>'
@@ -224,6 +224,9 @@ def make_html_output(packed_boards, purchased_boards, board_data, padding, max_b
         html_output += '<tr><td><font color="green"><b>All parts were successfully placed on the purchased boards.</b></font></td></tr>'
     html_output += '</table>'
 
+    # link to cutting diagram images in lower section of the page
+    html_output +='<a href="#cutting-diagrams">Jump down to the Cutting Diagrams</a><br><br>'
+
 
     for board in purchased_boards:
         html_output += f"<h2>Purchased Board ID: {board['BoardID']} - Material: {board['Material'].capitalize()}, Thickness: {board['Thickness']:.6g} in, Width: {board['Width']:.6g} in, Length: {board['Length']:.6g} in:</h2>"
@@ -239,6 +242,20 @@ def make_html_output(packed_boards, purchased_boards, board_data, padding, max_b
                     comments = b['Comments'] if 'Comments' in b and b['Comments'] != nan else ''
                     html_output += f"<tr><td>{b['ID']}</td><td>{b['Item']}</td><td>{b['Sticker']}</td><td>{b['Dimensions'][0]:.6g} x {b['Dimensions'][1]:.6g}</td><td>{(b['Dimensions'][0]-padding):.6g} x {(b['Dimensions'][1]-padding):.6g}</td><td>({b['Start Position'][0]:.6g}, {b['Start Position'][1]:.6g})</td><td>({b['End Position'][0]:.6g}, {b['End Position'][1]:.6g})</td><td>{comments}</td></tr>"
         html_output += '</table>'
+    
+    if image_list:
+        # include images in the HTML output
+        html_output += '<h2 id="cutting-diagrams">Cutting Diagrams:</h2>'
+        html_output +='<a href="#board-cutting-plan">Jump up to the top</a><br><br>'
+        for board_id, image_info in image_list.items():
+            # fit inside a max width and max height of 800 pixels square
+            max_width = 800
+            max_height = 800
+            scale = min(max_width / image_info['width'], max_height / image_info['height'], 1.0)
+
+            html_output += f'<h3>Board ID {board_id}</h3>'
+            html_output += f'<img src="{image_info["file"]}" alt="{image_info["file"]}" width="{int(image_info["width"] * scale)}" height="{int(image_info["height"] * scale)}"><br>'
+
 
     html_output += '</body></html>'
 
